@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>売上実績表示（発表モード対応）</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #222;
+            color: white;
+            font-family: 'Meiryo', sans-serif;
+            text-align: center;
+            padding-top: 50px;
+        }
+        /* 鑑定板 */
+        #price-board-monthly, #price-board-total {
+            background-color: #000;
+            border: 5px solid #555;
+            border-radius: 10px;
+            padding: 20px;
+            display: inline-block;
+            margin-top: 20px;
+            white-space: nowrap; 
+            overflow-x: auto;
+        }
+        /* 「￥」や「円」 */
+        .label {
+            font-size: 2rem;
+            color: #ccc;
+            vertical-align: middle;
+        }
+        /* 「十億」「一億」などの位 */
+        .place {
+            font-size: 1rem;
+            color: #888;
+            display: block;
+        }
+        /* 各桁のグループ */
+        .digit-group {
+            display: inline-block;
+            margin: 0 5px;
+            min-width: 50px;
+            text-align: center;
+        }
+        /* 「万」と「億」の区切りを少し空ける */
+        .separator-man { margin-right: 15px; }
+        .separator-oku { margin-right: 15px; }
+
+        /* 数字 */
+        .digit {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            color: #ff3333; /* 赤色 */
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.1s ease-in;
+        }
+        /* 入力欄とボタン */
+        .controls { 
+            margin: 20px;
+            /* 累計セクションの上に隙間を空ける */
+            margin-top: 40px; 
+        }
+        #salesInputMonthly, #salesInputTotal { 
+            font-size: 1.2rem; 
+            padding: 5px; 
+        }
+        #revealButtonMonthly, #revealButtonTotal { 
+            font-size: 1.2rem; 
+            padding: 5px 15px; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+
+    <h2>先月の売上実績</h2>
+    <div class="controls">
+        <input type="number" id="salesInputMonthly" placeholder="金額（半角数字）を入力">
+        <button id="revealButtonMonthly">売上上々！都城！</button>
+    </div>
+
+    <div id="price-board-monthly">
+        <span class="label">￥</span>
+        <span class="digit-group"><span class="place">十億</span><span id="d9-monthly" class="digit">0</span></span>
+        <span class="digit-group separator-oku"><span class="place">一億</span><span id="d8-monthly" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">千万</span><span id="d7-monthly" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">百万</span><span id="d6-monthly" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">十万</span><span id="d5-monthly" class="digit">0</span></span>
+        <span class="digit-group separator-man"><span class="place">万</span><span id="d4-monthly" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">千</span><span id="d3-monthly" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">百</span><span id="d2-monthly" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">十</span><span id="d1-monthly" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">一</span><span id="d0-monthly" class="digit">0</span></span>
+        <span class="label">円</span>
+    </div>
+
+    <h2>累計の売上実績</h2>
+    <div class="controls">
+        <input type="number" id="salesInputTotal" placeholder="金額（半角数字）を入力">
+        <button id="revealButtonTotal">オープン・ザ・プライス！</button>
+    </div>
+
+    <div id="price-board-total">
+        <span class="label">￥</span>
+        <span class="digit-group"><span class="place">十億</span><span id="d9-total" class="digit">0</span></span>
+        <span class="digit-group separator-oku"><span class="place">一億</span><span id="d8-total" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">千万</span><span id="d7-total" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">百万</span><span id="d6-total" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">十万</span><span id="d5-total" class="digit">0</span></span>
+        <span class="digit-group separator-man"><span class="place">万</span><span id="d4-total" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">千</span><span id="d3-total" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">百</span><span id="d2-total" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">十</span><span id="d1-total" class="digit">0</span></span>
+        <span class="digit-group"><span class="place">一</span><span id="d0-total" class="digit">0</span></span>
+        <span class="label">円</span>
+    </div>
+
+
+    <audio id="sound-0" src="いち.mp3" preload="auto"></audio> <audio id="sound-1" src="じゅう.mp3" preload="auto"></audio> <audio id="sound-2" src="ひゃく.mp3" preload="auto"></audio> <audio id="sound-3" src="せん.mp3" preload="auto"></audio> <audio id="sound-4" src="まん.mp3" preload="auto"></audio> <audio id="sound-5" src="じゅうまん.mp3" preload="auto"></audio> <audio id="sound-6" src="ひゃくまん.mp3" preload="auto"></audio> <audio id="sound-7" src="せんまん.mp3" preload="auto"></audio> <audio id="sound-8" src="いちおく.mp3" preload="auto"></audio> <audio id="sound-9" src="じゅうおく.mp3" preload="auto"></audio> <script>
+        /*
+         * JavaScript: サイトの「仕組み」
+         */
+
+        // ページが読み込まれた時に、まずURLをチェックする
+        window.addEventListener('DOMContentLoaded', () => {
+
+            // --- ★★★ ここからが追加した「発表モード」の仕掛け ★★★ ---
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const monthlyAmount = urlParams.get('m'); // ?m=... の値
+            const totalAmount = urlParams.get('t');   // ?t=... の値
+
+            const inputMonthly = document.getElementById('salesInputMonthly');
+            const inputTotal = document.getElementById('salesInputTotal');
+
+            // 'm' または 't' がURLに存在する場合、「発表モード」と判断
+            if (monthlyAmount || totalAmount) {
+                
+                // 両方の入力欄を非表示にする
+                if (inputMonthly) inputMonthly.style.display = 'none';
+                if (inputTotal) inputTotal.style.display = 'none';
+
+                // URLに 'm' があれば、その値を「先月」の入力欄にセット
+                if (monthlyAmount) {
+                    inputMonthly.value = monthlyAmount;
+                }
+                // URLに 't' があれば、その値を「累計」の入力欄にセット
+                if (totalAmount) {
+                    inputTotal.value = totalAmount;
+                }
+            }
+            // --- ★★★ 追加した仕掛けはここまで ★★★ ---
+
+
+            // --- ここから下は、前回作成した表示処理（変更なし） ---
+
+            // --- 共通の部品 ---
+            const audioElements = [
+                document.getElementById('sound-0'),
+                document.getElementById('sound-1'),
+                document.getElementById('sound-2'),
+                document.getElementById('sound-3'),
+                document.getElementById('sound-4'),
+                document.getElementById('sound-5'),
+                document.getElementById('sound-6'),
+                document.getElementById('sound-7'),
+                document.getElementById('sound-8'),
+                document.getElementById('sound-9')
+            ];
+            
+            let isMonthlyRunning = false;
+            let isTotalRunning = false;
+            const revealDelay = 800; 
+
+            
+            // --- 1. 先月セクションの処理 ---
+            const revealButtonMonthly = document.getElementById('revealButtonMonthly');
+            const digitElementsMonthly = [
+                document.getElementById('d0-monthly'), document.getElementById('d1-monthly'),
+                document.getElementById('d2-monthly'), document.getElementById('d3-monthly'),
+                document.getElementById('d4-monthly'), document.getElementById('d5-monthly'),
+                document.getElementById('d6-monthly'), document.getElementById('d7-monthly'),
+                document.getElementById('d8-monthly'), document.getElementById('d9-monthly')
+            ];
+
+            revealButtonMonthly.addEventListener('click', () => {
+                if (isMonthlyRunning) return;
+                // (URLからセットされた)隠し入力欄から値を取得
+                const amount = inputMonthly.value; 
+                if (amount.length > 10) {
+                    alert('金額は10桁（十億の位）まで入力してください。'); return;
+                }
+                if (amount && amount >= 0) {
+                    isMonthlyRunning = true;
+                    revealButtonMonthly.disabled = true;
+                    startReveal(amount, digitElementsMonthly, () => {
+                        isMonthlyRunning = false;
+                        revealButtonMonthly.disabled = false;
+                    });
+                } else {
+                    alert('0以上の金額を入力してください');
+                }
+            });
+
+
+            // --- 2. 累計セクションの処理 ---
+            const revealButtonTotal = document.getElementById('revealButtonTotal');
+            const digitElementsTotal = [
+                document.getElementById('d0-total'), document.getElementById('d1-total'),
+                document.getElementById('d2-total'), document.getElementById('d3-total'),
+                document.getElementById('d4-total'), document.getElementById('d5-total'),
+                document.getElementById('d6-total'), document.getElementById('d7-total'),
+                document.getElementById('d8-total'), document.getElementById('d9-total')
+            ];
+
+            revealButtonTotal.addEventListener('click', () => {
+                if (isTotalRunning) return;
+                // (URLからセットされた)隠し入力欄から値を取得
+                const amount = inputTotal.value; 
+                if (amount.length > 10) {
+                    alert('金額は10桁（十億の位）まで入力してください。'); return;
+                }
+                if (amount && amount >= 0) {
+                    isTotalRunning = true;
+                    revealButtonTotal.disabled = true;
+                    startReveal(amount, digitElementsTotal, () => {
+                        isTotalRunning = false;
+                        revealButtonTotal.disabled = false;
+                    });
+                } else {
+                    alert('0以上の金額を入力してください');
+                }
+            });
+
+
+            // --- 3. 共通の金額表示関数 ---
+            function startReveal(amount, targetDigitElements, onCompleteCallback) {
+                targetDigitElements.forEach(el => {
+                    el.textContent = '0';
+                    el.style.opacity = 0;
+                });
+                const amountString = String(amount).padStart(10, '0');
+                const digits = amountString.split('').reverse();
+                let index = 0; 
+
+                function showNextDigit() {
+                    if (index >= digits.length) {
+                        onCompleteCallback();
+                        return; 
+                    }
+                    targetDigitElements[index].textContent = digits[index];
+                    targetDigitElements[index].style.opacity = 1;
+                    const soundToPlay = audioElements[index];
+                    if (soundToPlay) {
+                        soundToPlay.currentTime = 0; 
+                        soundToPlay.play().catch(e => console.error("音声の再生に失敗しました:", e));
+                    }
+                    index++;
+                    setTimeout(showNextDigit, revealDelay);
+                }
+                showNextDigit();
+            }
+
+        }); // 'DOMContentLoaded' イベントリスナーの終わり
+    </script>
+
+</body>
+</html>
